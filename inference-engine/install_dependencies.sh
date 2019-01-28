@@ -19,6 +19,14 @@ function yes_or_no {
     done
 }
 
+
+ver=$(lsb_release -r)
+if [[ $ver == *"18.04"* ]]; then
+    libpng=libpng-dev
+else
+    libpng=libpng12-dev
+fi
+
 # install dependencies
 if [[ -f /etc/lsb-release ]]; then
     # Ubuntu
@@ -40,7 +48,7 @@ if [[ -f /etc/lsb-release ]]; then
             automake \
             libtool \
             autoconf \
-            libpng12-dev \
+            $libpng \
             libcairo2-dev \
             libpango1.0-dev \
             libglib2.0-dev \
