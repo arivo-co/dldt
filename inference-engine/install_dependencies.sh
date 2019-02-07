@@ -19,10 +19,12 @@ function yes_or_no {
     done
 }
 
-
+echo $params
 if [[ $params == *"18.04"* ]]; then
+    echo "Ubuntu 18.04"
     libpng=libpng-dev
 else
+    echo "Ubuntu not 18.04"
     libpng=libpng12-dev
 fi
 
