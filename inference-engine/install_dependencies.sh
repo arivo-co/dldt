@@ -20,8 +20,7 @@ function yes_or_no {
 }
 
 
-ver=$(lsb_release -r)
-if [[ $ver == *"18.04"* ]]; then
+if [[ $params == *"18.04"* ]]; then
     libpng=libpng-dev
 else
     libpng=libpng12-dev
