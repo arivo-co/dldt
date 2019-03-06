@@ -45,6 +45,45 @@ You can find more information [here](https://software.intel.com/en-us/openvino-t
 
 ## Changelog
 
+### Drop 13.1
+    New features:
+    - added max mode for contract primitive
+    - added one_hot primitive
+    - optional explicit output data type support for all primitives
+    Bug fixes:
+    - fix for graph optimizer (crop primitive)
+    - fix for processing order (deconvolution primitive)
+    - fix for convolution-eltwise primitive
+    UX:
+    - cache.json is searched in to library directory
+    Performance:
+    - optimizations for lstm_gemm primitive
+
+### Drop 13.0
+    New features:
+    - events pool
+    - group support in convolution and deconvolution primitives
+    - broadcastable inputs support for eltwise primitive
+    - asymmetric padding for convolution primitive
+    - fused convolution-eltwise primitive (API extension)
+    - auto-calculated output shape support for reshape primitive
+    - crop support for i8/s8/i32/i64 types
+    - broadcast axis support for broadcast primitive
+    - logic and comparison operations support for eltwise primitive
+    Bug fixes:
+    - added required alignment checks for some fc implementations
+    - added lstm support for f16 (half) type
+    - reorders for fc moved to graph compiler
+    - primitive fusing and reorder fixes
+    UX:
+    - added internal core tests project
+    - refactored optimizations pass manager and passes
+    Performance:
+    - optimized concatenation during upsampling (unpool)
+    - IMAD-based optimizations for convolution, fc, eltwise and pooling primitives (i8/s8)
+    - convolution-eltwise fusing optimizations
+    - partial writes optimizations for block-based kernels
+
 ### Drop 12.1
 	- gtests code refactor
 	- buildbreak fix

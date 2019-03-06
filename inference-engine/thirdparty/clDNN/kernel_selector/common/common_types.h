@@ -67,6 +67,9 @@ namespace kernel_selector
         GEMM,
         INDEX_SELECT,
         PYRAMID_ROI_ALIGN,
+
+        CONTRACT,
+        ONE_HOT,
  		DETECTION_OUTPUT    
 	};
 
@@ -248,7 +251,15 @@ namespace kernel_selector
         MODULU,
         SQRT,
         RSQRT,
-        ASSIGN
+        ASSIGN,
+        EQ,
+        NE,
+        LT,
+        LE,
+        GT,
+        GE,
+        LOGIC_AND,
+        LOGIC_OR
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -402,4 +413,16 @@ namespace kernel_selector
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     using uSize  = Size<std::uint32_t>;
     using stSize = Size<std::size_t>;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ContractMode
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    enum class ContractMode
+    {
+        SUM,
+        PRODUCT,
+        ALL,
+        ANY,
+        MAX,
+    };
 }

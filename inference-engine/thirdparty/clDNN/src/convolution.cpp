@@ -31,6 +31,8 @@ primitive_type_id convolution_type_id()
 
 layout convolution_inst::calc_output_layout(convolution_node const& node)
 {
+    assert((bool)node.get_primitive()->output_data_type == false
+           && "Output data type forcing is not supported for convolution_node!");
     auto desc = node.get_primitive();
 
     auto input_layout = node.input().get_output_layout();
@@ -130,6 +132,8 @@ std::string convolution_inst::to_string(convolution_node const& node)
     json_composite conv_info;
     conv_info.add("stride", strd.to_string());
     conv_info.add("input offset", desc->input_offset.to_string());
+    conv_info.add("padding above", desc->padding_above.to_string());
+    conv_info.add("padding below", desc->padding_below.to_string());
     conv_info.add("split", split);
     conv_info.add("dilation", dilation.to_string());
     conv_info.add("with activation", activation);

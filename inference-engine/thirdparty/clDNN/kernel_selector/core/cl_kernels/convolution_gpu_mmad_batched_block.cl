@@ -15,6 +15,37 @@
 #include "include/fetch.cl"
 #include "include/mmad.cl"
 
+#define SCALE 0.11f
+
+#ifdef LIGHTWEIGHT_QUANTIZATION
+    
+#define QUANTIZATION \
+    uchar4 out;\
+    out[0] = convert_uchar_sat((float)dotProd[o + OUT_BLOCK_WIDTH * 0][b] * SCALE + bias_f.s0);\
+    out[1] = convert_uchar_sat((float)dotProd[o + OUT_BLOCK_WIDTH * 1][b] * SCALE + bias_f.s1);\
+    out[2] = convert_uchar_sat((float)dotProd[o + OUT_BLOCK_WIDTH * 2][b] * SCALE + bias_f.s2);\
+    out[3] = convert_uchar_sat((float)dotProd[o + OUT_BLOCK_WIDTH * 3][b] * SCALE + bias_f.s3);
+
+#elif NO_QUANTIZATION
+
+#define QUANTIZATION \
+    uchar4 out;\
+    out[0] = convert_uchar_sat(dotProd[o + OUT_BLOCK_WIDTH * 0][b]);\
+    out[1] = convert_uchar_sat(dotProd[o + OUT_BLOCK_WIDTH * 1][b]);\
+    out[2] = convert_uchar_sat(dotProd[o + OUT_BLOCK_WIDTH * 2][b]);\
+    out[3] = convert_uchar_sat(dotProd[o + OUT_BLOCK_WIDTH * 3][b]);
+
+#else
+
+#define QUANTIZATION \
+    char4 out;\
+    out[0] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 0][b] * quant_f.s0 * I_QF + bias_f.s0) * calib_f.s0)), NL_M, NL_N);\
+    out[1] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 1][b] * quant_f.s1 * I_QF + bias_f.s1) * calib_f.s1)), NL_M, NL_N);\
+    out[2] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 2][b] * quant_f.s2 * I_QF + bias_f.s2) * calib_f.s2)), NL_M, NL_N);\
+    out[3] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 3][b] * quant_f.s3 * I_QF + bias_f.s3) * calib_f.s3)), NL_M, NL_N);
+
+#endif
+
 #define FILTER_IFM_MMAD_NUM ((FILTER_IFM_NUM + 31) / 32)
 #define FILTER_OFM_MMAD_NUM ((FILTER_OFM_NUM + 7) / 8)
 #define FILTER_IFM_ALIGNED (FILTER_IFM_MMAD_NUM * 32)
@@ -38,7 +69,11 @@ KERNEL(convolution_mmad_batched_block)(
     const uint x = get_global_id(0) * OUT_BLOCK_WIDTH;
     const uint y = get_global_id(1) * OUT_BLOCK_HEIGHT;
 
+#if WEIGHTS_PER_WORKITEM == 4
+    const uint f = (get_group_id(2) * 32 + get_sub_group_local_id() * 4) % FILTER_OFM_ALIGNED;
+#else
     const uint f = ((get_group_id(2) * WEIGHTS_PER_WORKITEM * 8) + get_sub_group_local_id() ) % FILTER_OFM_ALIGNED;
+#endif
     const uint b_block = (get_group_id(2) * 8 * WEIGHTS_PER_WORKITEM) / FILTER_OFM_ALIGNED;
 
     // all accumulators
@@ -102,25 +137,22 @@ KERNEL(convolution_mmad_batched_block)(
 
 #if WEIGHTS_PER_WORKITEM == 4
 
-float4 quant_f = as_float4(intel_sub_group_block_read4((__global uint*) (quantizations + f) ));
-float4 bias_f = as_float4(intel_sub_group_block_read4((__global uint*) (biases + f) ));
-float4 calib_f = as_float4(intel_sub_group_block_read4((__global uint*) (calibrations + f) ));
+float4 quant_f = vload4(0, quantizations + f);
+float4 bias_f = vload4(0, biases + f);
+float4 calib_f = vload4(0, calibrations + f);
 
 __attribute__((opencl_unroll_hint(OUT_BLOCK_WIDTH)))
 for(uint o = 0; o < OUT_BLOCK_WIDTH; o++)
 {
     const uint dst_index = GET_DATA_FS_BS_YX_BSV4_FSV32_INDEX(OUTPUT, b_block*4, f, y, x + o);
+    uint4 to_output;
     __attribute__((opencl_unroll_hint(4)))
     for(uint b = 0; b < 4; b++)
     {
-        char4 out;
-        out[0] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 0][b] * quant_f.s0 * I_QF + bias_f.s0) * calib_f.s0)), NL_M, NL_N);
-        out[1] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 1][b] * quant_f.s1 * I_QF + bias_f.s1) * calib_f.s1)), NL_M, NL_N);
-        out[2] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 2][b] * quant_f.s2 * I_QF + bias_f.s2) * calib_f.s2)), NL_M, NL_N);
-        out[3] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 3][b] * quant_f.s3 * I_QF + bias_f.s3) * calib_f.s3)), NL_M, NL_N);
-
-        intel_sub_group_block_write_uc4((__global uchar*)(output + dst_index + b * 32), as_uchar4(out));
+        QUANTIZATION;
+        to_output[b] = as_uint(out);
     }
+    intel_sub_group_block_write4((__global uint*)(output + dst_index), to_output);
 }
 #else
 __attribute__((opencl_unroll_hint(WEIGHTS_PER_WORKITEM)))
@@ -157,3 +189,6 @@ for(uint w = 0; w < WEIGHTS_PER_WORKITEM; w++)
 #undef FILTER_OFM_MMAD_NUM
 #undef FILTER_IFM_ALIGNED
 #undef FILTER_OFM_ALIGNED
+
+#undef SCALE
+#undef QUANTIZATION

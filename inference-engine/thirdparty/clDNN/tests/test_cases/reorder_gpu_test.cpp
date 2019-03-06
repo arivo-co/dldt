@@ -910,6 +910,33 @@ TEST(reorder_gpu_opt, basic_remove_redundant)
     EXPECT_TRUE(outputs.at("r2").get_memory().get_layout().format == format::yxfb);
 }
 
+TEST(reorder_gpu_opt, remove_redundant_activation_fuse)
+{
+    engine eng;
+
+    memory in = memory::allocate(eng, { data_types::f32, format::bfyx, tensor{ 1, 1, 2, 1 } });
+    set_values(in, { -1.0f, -1.0f });
+    memory scale_mem = memory::allocate(eng, { data_types::f32, format::bfyx, tensor{1, 1, 1, 1 } });
+    set_values(scale_mem, { 2.0f });
+    topology tpl{
+        input_layout("in", in.get_layout()),
+        reorder("r1", "in", format::bfyx, data_types::f32),
+        activation("relu", "r1", cldnn_activation_func::activation_relu_negative_slope, {0.01f, 0.0f}),
+        data("scale_data", scale_mem),
+        scale("output", "relu", "scale_data")
+    };
+
+    build_options opts;
+    opts.set_option(build_option::optimize_data(true));
+
+    network net(eng, tpl, opts);
+    net.set_input_data("in", in);
+    auto outputs = net.execute();
+    auto out_ptr = outputs.begin()->second.get_memory().pointer<float>();
+    EXPECT_FLOAT_EQ(out_ptr[0], -0.02f);
+    EXPECT_FLOAT_EQ(out_ptr[1], -0.02f);
+}
+
 TEST(reorder_gpu_opt, basic_do_not_remove_redundant_due_it_is_output)
 {
     engine eng;
@@ -1313,7 +1340,7 @@ public:
         assert(mean == "");
         assert(subtract_per_feature.size() == 0);
         
-        auto output = memory::allocate(engine, cldnn::layout(reorder->output_data_type, inputs[0].get_layout().format, inputs[0].get_layout().size));
+        auto output = memory::allocate(engine, cldnn::layout(*reorder->output_data_type, inputs[0].get_layout().format, inputs[0].get_layout().size));
 
         cldnn::pointer<InputType> input_mem = inputs[0].pointer<InputType>();
         cldnn::pointer<OutputType> output_mem = output.pointer<OutputType>();
@@ -1332,7 +1359,7 @@ public:
     {
         if (generic_params->data_type == data_types::f32)
         {
-            if (((cldnn::reorder*)layer_params)->output_data_type == data_types::f32)
+            if (*layer_params->output_data_type == data_types::f32)
             {
                 return generate_reference_typed<float, float>(inputs);
             }
@@ -1343,7 +1370,7 @@ public:
         }
         else
         {
-            if (((cldnn::reorder*)layer_params)->output_data_type == data_types::f32)
+            if (*layer_params->output_data_type == data_types::f32)
             {
                 return generate_reference_typed<FLOAT16, float>(inputs);
             }
