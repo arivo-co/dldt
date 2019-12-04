@@ -41,11 +41,11 @@ public:
         const int32_t numberOfDims = 4;
 
         auto complete_strided_slice_params = [&](std::vector<int32_t>& param) {
-            for (size_t i = param.size(); i < numberOfDims; ++i) param.push_back(1);
+            for (int32_t i = param.size(); i < numberOfDims; ++i) param.push_back(1);
         };
 
         auto completeStridedSliceMasks = [&](std::vector<uint8_t>& mask) {
-            for (size_t i = mask.size(); i < numberOfDims; ++i) mask.push_back(0);
+            for (int32_t i = mask.size(); i < numberOfDims; ++i) mask.push_back(0);
         };
 
         // Getting data from constant inputs. There are 3 args: Begin, End, Stride

@@ -27,8 +27,8 @@ else()
     add_compile_options("-Werror")
 endif()
 
-if (ENABLE_OPENCV)
+#if (ENABLE_OPENCV)
     add_subdirectory(calibration_tool/statistics_collector)
-endif()
+#endif()
 
 add_subdirectory(vpu)
