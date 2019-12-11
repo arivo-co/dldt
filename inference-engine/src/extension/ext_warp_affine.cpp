@@ -26,7 +26,7 @@ public:
             if (layer->insData[0].lock()->getTensorDesc().getDims().size() != 4)
                 THROW_IE_EXCEPTION << "WarpAffine input1 supports only 4d blobs!";
 
-            if (layer->insData[0].lock()->getTensorDesc().getDims().size() != 2)
+            if (layer->insData[1].lock()->getTensorDesc().getDims().size() != 2)
                 THROW_IE_EXCEPTION << "WarpAffine input2 supports only 2d blobs!";
 
             auto src_precision = layer->insData[0].lock()->getTensorDesc().getPrecision();
@@ -101,8 +101,8 @@ private:
             const float *psrc = src + n * CB * IH * IW;
 
             for (size_t w = 0; w < OW; ++w) {
-                float xi = std::max(std::min(w*matrix[0] + h*matrix[1] + matrix[2], 0.001f), IW-1.001f);
-                float yi = std::max(std::min(w*matrix[3] + h*matrix[4] + matrix[5], 0.001f), IH-1.001f);
+                float xi = std::min(std::max(w*matrix[0] + h*matrix[1] + matrix[2], 0.001f), IW-1.001f);
+                float yi = std::min(std::max(w*matrix[3] + h*matrix[4] + matrix[5], 0.001f), IH-1.001f);
 
                 int ih0 = (int)(yi);
                 int ih1 = ih0 + 1;
