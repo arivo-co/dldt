@@ -56,7 +56,7 @@ inline void warpAffine(const int N, const int C,
 //    INPUT0_TYPE xi = (xi_n + (INPUT0_TYPE)(1.f)) * (INPUT0_TYPE)(0.5f) * (INPUT0_TYPE)(IW);
 //    INPUT0_TYPE yi = (yi_n + (INPUT0_TYPE)(1.f)) * (INPUT0_TYPE)(0.5f) * (INPUT0_TYPE)(IH);
 
-    if (xi < (INPUT0_TYPE)(-0.5f) || yi < (INPUT0_TYPE)(-0.5f) || xi > IW-(INPUT0_TYPE)(0.5f) || yi > IH-(INPUT0_TYPE)(-0.5f)){
+    if (xi < (INPUT0_TYPE)(0.f) || yi < (INPUT0_TYPE)(0.f) || xi > IW-(INPUT0_TYPE)(1.f) || yi > IH-(INPUT0_TYPE)(-1.f)){
         __global OUTPUT0_TYPE* pdst = dst + (h)*OUTPUT0_PITCHES[2] + (w)*OUTPUT0_PITCHES[3];
 #if defined(INPUT0_FORMAT_YXFB) && defined(OUTPUT0_FORMAT_YXFB)
         typedef CAT(INPUT0_TYPE, VEC_SIZE) vec16_t;
@@ -86,12 +86,12 @@ inline void warpAffine(const int N, const int C,
     }
     else {
         int ih0 = (int)(yi);
-        int ih1 = (ih0 < IH - 1) ? ih0+1 : ih0;
+        int ih1 = ih0 + 1;
         INPUT0_TYPE h_lambda0 = yi - ih0;
         INPUT0_TYPE h_lambda1 = (INPUT0_TYPE)(1.0f) - h_lambda0;
 
         int iw0 = (int)(xi);
-        int iw1 = (iw0 < IW - 1) ? iw0 + 1 : iw0;
+        int iw1 = iw0 + 1;
         INPUT0_TYPE w_lambda0 = xi - iw0;
         INPUT0_TYPE w_lambda1 = (INPUT0_TYPE)(1.0f) - w_lambda0;
 

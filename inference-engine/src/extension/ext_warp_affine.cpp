@@ -91,6 +91,7 @@ private:
 #else
         const int block_size = 8;
 #endif
+        const float zero_float = 0.f;
 
         // Align channel number to block size to deal with channels padding in IE with multiple blobs
         size_t CB = (C + block_size - 1) & (-block_size);
@@ -101,28 +102,30 @@ private:
             const float *psrc = src + n * CB * IH * IW;
 
             for (size_t w = 0; w < OW; ++w) {
-                float xi = std::min(std::max(w*matrix[0] + h*matrix[1] + matrix[2], 0.001f), IW-1.001f);
-                float yi = std::min(std::max(w*matrix[3] + h*matrix[4] + matrix[5], 0.001f), IH-1.001f);
+                float xi = w*matrix[0] + h*matrix[1] + matrix[2];
+                float yi = w*matrix[3] + h*matrix[4] + matrix[5];
 
-                int ih0 = (int)(yi);
-                int ih1 = ih0 + 1;
-                float h_lambda0 = yi - ih0;
-                float h_lambda1 = 1.0f - h_lambda0;
+                const float *psrc00, *psrc01, *psrc10, *psrc11;
+                float h_lambda0 = 1.f, h_lambda1 = 0.f, w_lambda0 = 1.f, w_lambda1 = 0.f;
+                if(xi < -0.f || yi < -0.f || xi >= (IW-1.f) || yi >= (IH-1.f)){
+                    psrc00 = psrc01 = psrc10 = psrc11 = &zero_float;
+                }
+                else{
+                    int ih0 = (int)(yi);
+                    int ih1 = ih0 + 1;
+                    h_lambda0 = yi - ih0;
+                    h_lambda1 = 1.0f - h_lambda0;
 
-                int iw0 = (int)(xi);
-                int iw1 = iw0 + 1;
-                float w_lambda0 = xi - iw0;
-                float w_lambda1 = 1.0f - w_lambda0;
+                    int iw0 = (int)(xi);
+                    int iw1 = iw0 + 1;
+                    w_lambda0 = xi - iw0;
+                    w_lambda1 = 1.0f - w_lambda0;
 
-                const float *psrc00 =
-                        psrc + cb * block_size * IW * IH + ih0 * IW * block_size + iw0 * block_size;
-                const float *psrc01 =
-                        psrc + cb * block_size * IW * IH + ih0 * IW * block_size + iw1 * block_size;
-                const float *psrc10 =
-                        psrc + cb * block_size * IW * IH + ih1 * IW * block_size + iw0 * block_size;
-                const float *psrc11 =
-                        psrc + cb * block_size * IW * IH + ih1 * IW * block_size + iw1 * block_size;
-
+                    psrc00 = psrc + cb * block_size * IW * IH + ih0 * IW * block_size + iw0 * block_size;
+                    psrc01 = psrc + cb * block_size * IW * IH + ih0 * IW * block_size + iw1 * block_size;
+                    psrc10 = psrc + cb * block_size * IW * IH + ih1 * IW * block_size + iw0 * block_size;
+                    psrc11 = psrc + cb * block_size * IW * IH + ih1 * IW * block_size + iw1 * block_size;
+                }
                 float *pdst = dst + n * CB * OH * OW + cb * block_size * OW * OH + h * OW * block_size +
                               w * block_size;
 
