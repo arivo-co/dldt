@@ -20,4 +20,4 @@ target_include_directories(${TARGET_NAME} PRIVATE
     "${IE_MAIN_SOURCE_DIR}/src/inference_engine"
 )
 
-target_link_libraries(${TARGET_NAME} PRIVATE inference_engine ade)
+target_link_libraries(${TARGET_NAME} PRIVATE inference_engine_s ade)

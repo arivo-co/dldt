@@ -58,7 +58,7 @@ else()
 endif()
 
 target_compile_definitions(${TARGET_NAME} PUBLIC -DMKLDNN_THR=${MKLDNN_THR})
-target_link_libraries(${TARGET_NAME} PRIVATE inference_engine ${INTEL_ITT_LIBS} mkldnn)
+target_link_libraries(${TARGET_NAME} PRIVATE inference_engine_s ${INTEL_ITT_LIBS} mkldnn)
 
 #  add test library
 
