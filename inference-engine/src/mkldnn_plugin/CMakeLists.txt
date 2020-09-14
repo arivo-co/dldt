@@ -93,6 +93,7 @@ set(LAYERS
     ${CMAKE_CURRENT_SOURCE_DIR}/nodes/common/softmax.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/nodes/normalize.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/nodes/interp.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/nodes/warp_affine.cpp
 )
 
 foreach(LAYER ${LAYERS})
