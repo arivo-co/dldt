@@ -21,27 +21,44 @@ source_group("include" FILES ${PUBLIC_HEADERS})
 
 # Create shared library
 
+#include_directories(${PUBLIC_HEADERS_DIR})
+#include_directories(${IE_MAIN_SOURCE_DIR}/include)
+
 add_library(${TARGET_NAME} SHARED ${LIBRARY_SRC} ${PUBLIC_HEADERS})
+add_library(${TARGET_NAME}_s STATIC ${LIBRARY_SRC} $<TARGET_OBJECTS:ngraphobj> ${PUBLIC_HEADERS})
 
 target_compile_definitions(${TARGET_NAME} PRIVATE IMPLEMENT_INFERENCE_ENGINE_API)
+target_compile_definitions(${TARGET_NAME}_s PRIVATE IMPLEMENT_INFERENCE_ENGINE_API)
 
 target_link_libraries(${TARGET_NAME} PUBLIC ${NGRAPH_LIBRARIES})
+message("NGLIB ${NGRAPH_LIBRARIES}")
+#target_link_libraries(${TARGET_NAME}_s PUBLIC ${NGRAPH_LIBRARIES})
 
 target_include_directories(${TARGET_NAME} PUBLIC ${PUBLIC_HEADERS_DIR})
+target_include_directories(${TARGET_NAME}_s PUBLIC ${PUBLIC_HEADERS_DIR})
 
 # TODO: get rid of this dependency
 target_include_directories(${TARGET_NAME} PUBLIC ${IE_MAIN_SOURCE_DIR}/include)
+target_include_directories(${TARGET_NAME}_s PUBLIC ${IE_MAIN_SOURCE_DIR}/include)
+target_include_directories(${TARGET_NAME}_s PUBLIC ${IE_MAIN_SOURCE_DIR}/../ngraph/src)
 
 add_cpplint_target(${TARGET_NAME}_cpplint FOR_TARGETS ${TARGET_NAME})
+add_cpplint_target(${TARGET_NAME}_cpplint_s FOR_TARGETS ${TARGET_NAME}_s)
 add_clang_format_target(${TARGET_NAME}_clang_format FOR_TARGETS ${TARGET_NAME})
+add_clang_format_target(${TARGET_NAME}_clang_format_s FOR_TARGETS ${TARGET_NAME}_s)
 
 # developer package
 
 ie_developer_export_targets(${TARGET_NAME})
+ie_developer_export_targets(${TARGET_NAME}_s)
 
 # install
 
 install(TARGETS ${TARGET_NAME}
+        RUNTIME DESTINATION ${IE_CPACK_RUNTIME_PATH} COMPONENT core
+        ARCHIVE DESTINATION ${IE_CPACK_ARCHIVE_PATH} COMPONENT core
+        LIBRARY DESTINATION ${IE_CPACK_LIBRARY_PATH} COMPONENT core)
+install(TARGETS ${TARGET_NAME}_s
         RUNTIME DESTINATION ${IE_CPACK_RUNTIME_PATH} COMPONENT core
         ARCHIVE DESTINATION ${IE_CPACK_ARCHIVE_PATH} COMPONENT core
         LIBRARY DESTINATION ${IE_CPACK_LIBRARY_PATH} COMPONENT core)

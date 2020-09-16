@@ -204,6 +204,7 @@ add_library(${TARGET_NAME}_s STATIC
             $<TARGET_OBJECTS:${TARGET_NAME}_obj>
             $<TARGET_OBJECTS:${TARGET_NAME}_common_obj>
             $<TARGET_OBJECTS:${TARGET_NAME}_legacy_obj>
+            $<TARGET_OBJECTS:ngraphobj>
             ${NN_BUILDER_LIBRARY_SRC}
             ${IE_STATIC_DEPENDENT_FILES})
 
@@ -217,7 +218,7 @@ if(WIN32)
     set_target_properties(${TARGET_NAME}_s PROPERTIES COMPILE_PDB_NAME ${TARGET_NAME}_s)
 endif()
 
-target_link_libraries(${TARGET_NAME}_s PRIVATE ${NGRAPH_LIBRARIES} inference_engine_transformations
+target_link_libraries(${TARGET_NAME}_s PRIVATE inference_engine_transformations_s
 # NOTE: public linkage with ITT is important here! without it binaries that use this library do not
 #       get proper compile flags to support ITT which causes hard-to-detect bugs.
                                        PUBLIC pugixml ${INTEL_ITT_LIBS} ${CMAKE_DL_LIBS})
