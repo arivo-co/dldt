@@ -46,19 +46,26 @@ target_include_directories(${TARGET_NAME}_obj PRIVATE
 # Create shared library
 
 add_library(${TARGET_NAME} SHARED $<TARGET_OBJECTS:${TARGET_NAME}_obj>)
+add_library(${TARGET_NAME}_s STATIC $<TARGET_OBJECTS:${TARGET_NAME}_obj>)
 
 ie_add_vs_version_file(NAME ${TARGET_NAME}
                        FILEDESCRIPTION "Inference Engine Legacy library")
 
 set_ie_threading_interface_for(${TARGET_NAME})
+set_ie_threading_interface_for(${TARGET_NAME}_s)
 
 target_link_libraries(${TARGET_NAME} PUBLIC inference_engine
                                      PRIVATE pugixml openvino::itt
                                              ${NGRAPH_LIBRARIES} inference_engine_transformations)
+target_link_libraries(${TARGET_NAME}_s PUBLIC inference_engine_s
+        PRIVATE pugixml openvino::itt
+        ${NGRAPH_LIBRARIES_S} inference_engine_transformations_s)
 
 target_include_directories(${TARGET_NAME} INTERFACE ${PUBLIC_HEADERS_DIR})
+target_include_directories(${TARGET_NAME}_s INTERFACE ${PUBLIC_HEADERS_DIR})
 
 add_cpplint_target(${TARGET_NAME}_cpplint FOR_TARGETS ${TARGET_NAME})
+add_cpplint_target(${TARGET_NAME}_s_cpplint FOR_TARGETS ${TARGET_NAME}_s)
 
 ie_add_api_validator_post_build_step(TARGET ${TARGET_NAME})
 
@@ -66,10 +73,13 @@ ie_add_api_validator_post_build_step(TARGET ${TARGET_NAME})
 
 set_target_properties(${TARGET_NAME} ${TARGET_NAME}_obj
                       PROPERTIES INTERPROCEDURAL_OPTIMIZATION_RELEASE ${ENABLE_LTO})
+set_target_properties(${TARGET_NAME}_s ${TARGET_NAME}_obj
+        PROPERTIES INTERPROCEDURAL_OPTIMIZATION_RELEASE ${ENABLE_LTO})
 
 # export targets
 
 export(TARGETS ${TARGET_NAME} NAMESPACE IE:: APPEND FILE "${CMAKE_BINARY_DIR}/targets.cmake")
+export(TARGETS ${TARGET_NAME}_s NAMESPACE IE:: APPEND FILE "${CMAKE_BINARY_DIR}/targets.cmake")
 
 # developer package
 

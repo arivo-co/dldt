@@ -117,6 +117,7 @@ function(build_ngraph)
     # set(NGRAPH_COMPONENT_PREFIX "deployment_tools/ngraph/")
     add_subdirectory(ngraph)
     set(NGRAPH_LIBRARIES ngraph PARENT_SCOPE)
+    set(NGRAPH_LIBRARIES_S ngraph_s PARENT_SCOPE)
 endfunction()
 
 file(REMOVE "${CMAKE_BINARY_DIR}/openvino_targets_developer.cmake")

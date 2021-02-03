@@ -170,8 +170,8 @@ set_ie_threading_interface_for(${TARGET_NAME})
 
 target_compile_definitions(${TARGET_NAME} PUBLIC -DMKLDNN_THR=${MKLDNN_THR})
 
-target_link_libraries(${TARGET_NAME} PRIVATE mkldnn inference_engine inference_engine_legacy
-                                             inference_engine_transformations inference_engine_lp_transformations)
+target_link_libraries(${TARGET_NAME} PRIVATE mkldnn inference_engine_s inference_engine_legacy_s
+                                             inference_engine_transformations_s inference_engine_lp_transformations_s)
 
 # Cross compiled function
 # TODO: The same for proposal, proposalONNX, topk

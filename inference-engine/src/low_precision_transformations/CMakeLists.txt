@@ -21,6 +21,10 @@ add_library(${TARGET_NAME} SHARED
             ${LIBRARY_SRC}
             ${PUBLIC_HEADERS})
 
+add_library(${TARGET_NAME}_s STATIC
+        ${LIBRARY_SRC}
+        ${PUBLIC_HEADERS})
+
 ie_faster_build(${TARGET_NAME}
     UNITY
 )
@@ -29,19 +33,25 @@ ie_add_vs_version_file(NAME ${TARGET_NAME}
                        FILEDESCRIPTION "Inference Engine LP transformations library")
 
 target_compile_definitions(${TARGET_NAME} PRIVATE inference_engine_transformations_EXPORTS)
+target_compile_definitions(${TARGET_NAME}_s PRIVATE inference_engine_transformations_EXPORTS)
 
 target_link_libraries(${TARGET_NAME} PUBLIC inference_engine_transformations
                                      PRIVATE openvino::itt)
+target_link_libraries(${TARGET_NAME}_s PUBLIC inference_engine_transformations_s
+        PRIVATE openvino::itt)
 
 target_include_directories(${TARGET_NAME} PUBLIC ${PUBLIC_HEADERS_DIR})
+target_include_directories(${TARGET_NAME}_s PUBLIC ${PUBLIC_HEADERS_DIR})
 
 add_cpplint_target(${TARGET_NAME}_cpplint FOR_TARGETS ${TARGET_NAME})
+add_cpplint_target(${TARGET_NAME}_s_cpplint FOR_TARGETS ${TARGET_NAME}_s)
 
 ie_add_api_validator_post_build_step(TARGET ${TARGET_NAME})
 
 # LTO
 
 set_target_properties(${TARGET_NAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION_RELEASE ${ENABLE_LTO})
+set_target_properties(${TARGET_NAME}_s PROPERTIES INTERPROCEDURAL_OPTIMIZATION_RELEASE ${ENABLE_LTO})
 
 # developer package
 

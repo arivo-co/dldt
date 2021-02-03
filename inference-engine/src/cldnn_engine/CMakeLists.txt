@@ -22,9 +22,9 @@ ie_add_plugin(NAME ${TARGET_NAME}
               VERSION_DEFINES_FOR cldnn_engine.cpp)
 
 target_link_libraries(${TARGET_NAME} PRIVATE clDNN_lib pugixml
-                                             inference_engine inference_engine_legacy
-                                             inference_engine_transformations
-                                             inference_engine_lp_transformations)
+                                             inference_engine inference_engine_legacy_s
+                                             inference_engine_transformations_s
+                                             inference_engine_lp_transformations_s)
 
 set(CLDNN_TOP_FOLDER "${IE_MAIN_SOURCE_DIR}/thirdparty/clDNN")
 target_include_directories(${TARGET_NAME} PRIVATE

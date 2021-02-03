@@ -40,6 +40,8 @@ source_group("include" FILES ${PUBLIC_HEADERS})
 # Create shared library
 add_library(onnx_importer SHARED ${LIBRARY_SRC} ${PUBLIC_HEADERS})
 add_library(ngraph::onnx_importer ALIAS onnx_importer)
+add_library(onnx_importer_s STATIC ${LIBRARY_SRC} ${PUBLIC_HEADERS})
+add_library(ngraph::onnx_importer_s ALIAS onnx_importer_s)
 
 if(COMMAND ie_add_vs_version_file)
     ie_add_vs_version_file(NAME onnx_importer
@@ -55,34 +57,54 @@ endif()
 
 target_link_libraries(onnx_importer PRIVATE onnx onnx_proto ${Protobuf_LIBRARIES} ngraph::builder)
 target_link_libraries(onnx_importer PUBLIC ngraph)
+target_link_libraries(onnx_importer_s PRIVATE onnx onnx_proto ${Protobuf_LIBRARIES} ngraph::builder)
+target_link_libraries(onnx_importer_s PUBLIC ngraph_s)
 
 set_target_properties(onnx_importer PROPERTIES
                       CXX_VISIBILITY_PRESET hidden
                       C_VISIBILITY_PRESET hidden
                       VISIBILITY_INLINES_HIDDEN ON
                       POSITION_INDEPENDENT_CODE ON)
+set_target_properties(onnx_importer_s PROPERTIES
+        CXX_VISIBILITY_PRESET hidden
+        C_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN ON
+        POSITION_INDEPENDENT_CODE ON)
 set(ONNX_INSTALL_INCLUDE "${NGRAPH_INSTALL_INCLUDE}/ngraph/frontend")
 target_include_directories(onnx_importer SYSTEM PUBLIC $<BUILD_INTERFACE:${ONNX_IMPORT_INCLUDE_DIR}>
                                                        $<INSTALL_INTERFACE:${ONNX_INSTALL_INCLUDE}>)
+target_include_directories(onnx_importer_s SYSTEM PUBLIC $<BUILD_INTERFACE:${ONNX_IMPORT_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:${ONNX_INSTALL_INCLUDE}>)
 target_include_directories(onnx_importer SYSTEM PRIVATE ${NGRAPH_INCLUDE_PATH} ${NGRAPH_INCLUDE_PATH}/ngraph
+        ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIRS})
+target_include_directories(onnx_importer_s SYSTEM PRIVATE ${NGRAPH_INCLUDE_PATH} ${NGRAPH_INCLUDE_PATH}/ngraph
         ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIRS})
 target_include_directories(onnx_importer PRIVATE ${ONNX_IMPORT_INCLUDE_DIR}/onnx_import/core
                                                  ${ONNX_IMPORT_INCLUDE_DIR}/onnx_import/op
                                                  ${ONNX_IMPORT_INCLUDE_DIR}/onnx_import/utils)
+target_include_directories(onnx_importer_s PRIVATE ${ONNX_IMPORT_INCLUDE_DIR}/onnx_import/core
+        ${ONNX_IMPORT_INCLUDE_DIR}/onnx_import/op
+        ${ONNX_IMPORT_INCLUDE_DIR}/onnx_import/utils)
 
 target_compile_definitions(onnx_importer PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
+target_compile_definitions(onnx_importer_s PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
 
 if(NGRAPH_USE_PROTOBUF_LITE)
     target_compile_definitions(onnx_importer PRIVATE NGRAPH_USE_PROTOBUF_LITE)
+    target_compile_definitions(onnx_importer_s PRIVATE NGRAPH_USE_PROTOBUF_LITE)
 endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_importer PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
             -Wno-invalid-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
             -Wno-unused-private-field -Wno-shadow -Wno-deprecated PUBLIC -Wno-undefined-func-template)
+    target_compile_options(onnx_importer_s PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
+            -Wno-invalid-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
+            -Wno-unused-private-field -Wno-shadow -Wno-deprecated PUBLIC -Wno-undefined-func-template)
 endif()
 
 target_compile_definitions(onnx_importer PRIVATE ONNX_IMPORTER_DLL_EXPORTS)
+target_compile_definitions(onnx_importer_s PRIVATE ONNX_IMPORTER_DLL_EXPORTS)
 
 install(TARGETS onnx_importer EXPORT ngraphTargets
         RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph
@@ -100,4 +122,5 @@ install(DIRECTORY ${ONNX_IMPORT_INCLUDE_DIR}/onnx_import
 
 if (NGRAPH_EXPORT_TARGETS_ENABLE)
     export(TARGETS onnx_importer NAMESPACE ngraph:: APPEND FILE "${NGRAPH_TARGETS_FILE}")
+    export(TARGETS onnx_importer_s NAMESPACE ngraph:: APPEND FILE "${NGRAPH_TARGETS_FILE}")
 endif()

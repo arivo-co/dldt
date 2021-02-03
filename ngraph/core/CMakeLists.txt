@@ -35,6 +35,7 @@ configure_file(include/ngraph/version.in.hpp include/ngraph/version.hpp)
 
 # Create shared library
 add_library(ngraph SHARED ${LIBRARY_SRC} ${PUBLIC_HEADERS})
+add_library(ngraph_s STATIC ${LIBRARY_SRC} ${PUBLIC_HEADERS})
 
 if(COMMAND ie_faster_build)
     ie_faster_build(ngraph
@@ -58,6 +59,7 @@ set_target_properties(ngraph PROPERTIES
                       VISIBILITY_INLINES_HIDDEN ON)
 
 target_link_libraries(ngraph PRIVATE openvino::itt ngraph::builder ngraph::reference)
+target_link_libraries(ngraph_s PRIVATE openvino::itt ngraph::builder ngraph::reference)
 
 find_package(Graphviz QUIET)
 if (GRAPHVIZ_FOUND)
@@ -73,8 +75,12 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph PROPERTIES
         VERSION ${NGRAPH_VERSION}
         SOVERSION ${NGRAPH_API_VERSION})
+    set_target_properties(ngraph_ PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION})
 endif()
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
+target_compile_definitions(ngraph_s PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
 if (LINUX)
     # nGraph links against one or more libraries (ex. LLVM) but we don't want to
@@ -82,6 +88,7 @@ if (LINUX)
     # option so making this portable is still an open issue. As a note for the future,
     # this is not an issue on Windows and LLVM's lld does support --exclude-libs.
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--exclude-libs,ALL")
+    set_property(TARGET ngraph_s APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--exclude-libs,ALL")
 
     # GCC invokes the linker with --as-needed by default which doesn't work for us
     # because generated code needs to find symbols in these DSOs at runtime.
@@ -91,9 +98,11 @@ if (LINUX)
     # Intel OpenMP runtime so we don't mix libgomp and libiomp5
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--no-as-needed")
+        set_property(TARGET ngraph_s APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--no-as-needed")
     endif()
 elseif(APPLE)
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-rpath,@loader_path")
+    set_property(TARGET ngraph_s APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-rpath,@loader_path")
 endif()
 
 # Defines macro in C++ to load backend plugin
@@ -107,12 +116,24 @@ target_include_directories(ngraph PRIVATE ${NGRAPH_INCLUDE_DIR}
                                           ${NGRAPH_INCLUDE_DIR}/runtime
                                           ${CMAKE_CURRENT_SOURCE_DIR}/src
                                           )
+target_include_directories(ngraph_s PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH}> $<INSTALL_INTERFACE:${NGRAPH_INSTALL_INCLUDE}>)
+target_include_directories(ngraph_s PRIVATE ${NGRAPH_INCLUDE_DIR}
+        ${NGRAPH_INCLUDE_DIR}/op
+        ${NGRAPH_INCLUDE_DIR}/op/util
+        ${NGRAPH_INCLUDE_DIR}/pass
+        ${NGRAPH_INCLUDE_DIR}/pattern
+        ${NGRAPH_INCLUDE_DIR}/pattern/op
+        ${NGRAPH_INCLUDE_DIR}/runtime
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        )
 
 #Add an alias so that library can be used inside the build tree, e.g. when testing
 add_library(ngraph::ngraph ALIAS ngraph)
+add_library(ngraph::ngraph_s ALIAS ngraph_s)
 
 if (NOT WIN32)
     target_link_libraries(ngraph PRIVATE dl)
+    target_link_libraries(ngraph_s PRIVATE dl)
 endif()
 
 # Build subdirectories for all build types on Windows
