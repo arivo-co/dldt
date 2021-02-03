@@ -152,7 +152,10 @@ build_ngraph()
 add_subdirectory(inference-engine)
 
 add_subdirectory(model-optimizer)
-add_subdirectory(docs)
+
+if(ENABLE_DOCS)
+    add_subdirectory(docs)
+endif()
 
 #
 # Shellcheck
