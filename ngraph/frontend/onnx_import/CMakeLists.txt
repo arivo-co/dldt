@@ -122,7 +122,7 @@ install(DIRECTORY ${ONNX_IMPORT_INCLUDE_DIR}/onnx_import
 
 if (NGRAPH_EXPORT_TARGETS_ENABLE)
     export(TARGETS onnx_importer NAMESPACE ngraph:: APPEND FILE "${NGRAPH_TARGETS_FILE}")
-    export(TARGETS onns NAMESPACE ngraph:: APPEND FILE "${NGRAPH_TARGETS_FILE}")
+    export(TARGETS onnx NAMESPACE ngraph:: APPEND FILE "${NGRAPH_TARGETS_FILE}")
     export(TARGETS onnx_proto NAMESPACE ngraph:: APPEND FILE "${NGRAPH_TARGETS_FILE}")
     export(TARGETS onnx_importer_s NAMESPACE ngraph:: APPEND FILE "${NGRAPH_TARGETS_FILE}")
 endif()
