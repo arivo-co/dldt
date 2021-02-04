@@ -17,7 +17,6 @@ source_group("src" FILES ${LIBRARY_SRC})
 # Create shared library
 
 add_library(${TARGET_NAME} SHARED ${LIBRARY_SRC})
-add_library(${TARGET_NAME}_s STATIC ${LIBRARY_SRC})
 
 ie_faster_build(${TARGET_NAME}
     UNITY
@@ -27,26 +26,18 @@ ie_add_vs_version_file(NAME ${TARGET_NAME}
                        FILEDESCRIPTION "Inference Engine IR v7 reader plugin")
 
 target_compile_definitions(${TARGET_NAME} PRIVATE IMPLEMENT_INFERENCE_ENGINE_PLUGIN)
-target_compile_definitions(${TARGET_NAME}_s PRIVATE IMPLEMENT_INFERENCE_ENGINE_PLUGIN)
 
 target_include_directories(${TARGET_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/"
                                                   "${IE_MAIN_SOURCE_DIR}/src/inference_engine"
                                                   "${IE_MAIN_SOURCE_DIR}/src/readers/ir_reader")
-target_include_directories(${TARGET_NAME}_s PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/"
-        "${IE_MAIN_SOURCE_DIR}/src/inference_engine"
-        "${IE_MAIN_SOURCE_DIR}/src/readers/ir_reader")
 
 target_link_libraries(${TARGET_NAME} PRIVATE inference_engine_reader_api inference_engine_plugin_api
-                                             inference_engine_legacy inference_engine pugixml openvino::itt)
-target_link_libraries(${TARGET_NAME}_s PRIVATE inference_engine_reader_api inference_engine_plugin_api
-        inference_engine_legacy_s inference_engine_s pugixml openvino::itt)
+                                             inference_engine_legacy_s inference_engine_s pugixml openvino::itt)
 
 ie_add_api_validator_post_build_step(TARGET ${TARGET_NAME})
 
 set_target_properties(${TARGET_NAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION_RELEASE ${ENABLE_LTO})
-set_target_properties(${TARGET_NAME}_s PROPERTIES INTERPROCEDURAL_OPTIMIZATION_RELEASE ${ENABLE_LTO})
 
 # code style
 
 add_cpplint_target(${TARGET_NAME}_cpplint FOR_TARGETS ${TARGET_NAME})
-add_cpplint_target(${TARGET_NAME}_s_cpplint FOR_TARGETS ${TARGET_NAME}_s)
