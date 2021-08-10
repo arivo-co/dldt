@@ -35,6 +35,8 @@ source_group("${__CLDNN_Label__main}"             FILES ${__CLDNN_Sources__main}
 # ===================================== Include/Link directories =======================================
 
 include_directories(
+    "${CMAKE_SOURCE_DIR}/thirdparty/ocl/cl_headers"
+    "${CMAKE_SOURCE_DIR}/thirdparty/ocl/clhpp_headers/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${__CLDNN_Directory__main}"
   )
