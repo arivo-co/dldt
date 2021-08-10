@@ -14,3 +14,11 @@
 	path = inference-engine/samples/thirdparty/gflags
 	url = https://github.com/gflags/gflags.git
 	ignore = dirty
+[submodule "thirdparty/ocl/cl_headers"]
+	path = thirdparty/ocl/cl_headers
+	url = https://github.com/KhronosGroup/OpenCL-Headers.git
+	ignore = dirty
+[submodule "thirdparty/ocl/clhpp_headers"]
+	path = thirdparty/ocl/clhpp_headers
+	url = https://github.com/KhronosGroup/OpenCL-CLHPP.git
+	ignore = dirty
