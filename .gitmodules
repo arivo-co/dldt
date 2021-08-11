@@ -20,3 +20,9 @@
 [submodule "thirdparty/ocl/clhpp_headers"]
 	path = thirdparty/ocl/clhpp_headers
 	url = https://github.com/KhronosGroup/OpenCL-CLHPP.git
+[submodule "thirdparty/pugixml"]
+	path = thirdparty/pugixml
+	url = https://github.com/zeux/pugixml.git
+[submodule "thirdparty/ade"]
+	path = thirdparty/ade
+	url = https://github.com/opencv/ade.git
