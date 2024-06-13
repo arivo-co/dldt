@@ -46,7 +46,7 @@ if [ -f /etc/lsb-release ]; then
             libtool \
             autoconf \
             shellcheck \
-            python \
+            python-is-python3 \
             libcairo2-dev \
             libpango1.0-dev \
             libglib2.0-dev \

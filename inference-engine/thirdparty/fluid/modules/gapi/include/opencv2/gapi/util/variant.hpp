@@ -420,7 +420,9 @@ namespace util
         };
         if (lhs.index() != rhs.index())
             return false;
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
         return (eqs[lhs.index()])(lhs.memory, rhs.memory);
+#pragma GCC diagnostic pop
     }
 
     template<typename... Us> bool operator!=(const variant<Us...> &lhs,

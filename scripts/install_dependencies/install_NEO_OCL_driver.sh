@@ -30,8 +30,8 @@ CENTOS_MINOR=
 UBUNTU_VERSION=
 DISTRO=
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-INSTALL_DRIVER_VERSION='20.35.17767'
-AVAILABLE_DRIVERS=("19.41.14441" "20.35.17767")
+INSTALL_DRIVER_VERSION='24.17.29377.6'
+AVAILABLE_DRIVERS=("19.41.14441" "20.35.17767" "24.17.29377.6")
 
 
 print_help()
@@ -45,7 +45,7 @@ Download and installs the Intel® Graphics Compute Runtime for OpenCL™ Driver 
     -d, --install_driver    Manually select driver version to one of available to install drivers.
                             Default value: $INSTALL_DRIVER_VERSION
                             Available to install drivers: ${AVAILABLE_DRIVERS[*]}
-    -h, --help              display this help and exit" 
+    -h, --help              display this help and exit"
     echo "$usage"
 }
 
@@ -177,7 +177,7 @@ _install_user_mode_ubuntu()
 install_user_mode()
 {
     echo "Installing user mode driver..."
-    
+
     if [[ $DISTRO == "centos" ]]; then
         _install_user_mode_centos
     else
@@ -197,7 +197,7 @@ _uninstall_user_mode_centos()
            "intel-gmmlib"
            "intel-igc-core"
            "intel-igc-opencl")
-    for package in "${PACKAGES[@]}"; do      
+    for package in "${PACKAGES[@]}"; do
         echo "rpm -qa | grep $package"
         found_package=$(rpm -qa | grep "$package")
         if [[ $? -eq 0 ]]; then
@@ -279,6 +279,15 @@ _download_packages_ubuntu()
         wget https://github.com/intel/compute-runtime/releases/download/20.35.17767/intel-ocloc_20.35.17767_amd64.deb
         wget https://github.com/intel/compute-runtime/releases/download/20.35.17767/intel-level-zero-gpu_1.0.17767_amd64.deb
     ;;
+    "24.17.29377.6")
+        wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.16695.4/intel-igc-core_1.0.16695.4_amd64.deb
+        wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.16695.4/intel-igc-opencl_1.0.16695.4_amd64.deb
+        wget https://github.com/intel/compute-runtime/releases/download/24.17.29377.6/intel-level-zero-gpu-dbgsym_1.3.29377.6_amd64.ddeb
+        wget https://github.com/intel/compute-runtime/releases/download/24.17.29377.6/intel-level-zero-gpu_1.3.29377.6_amd64.deb
+        wget https://github.com/intel/compute-runtime/releases/download/24.17.29377.6/intel-opencl-icd-dbgsym_24.17.29377.6_amd64.ddeb
+        wget https://github.com/intel/compute-runtime/releases/download/24.17.29377.6/intel-opencl-icd_24.17.29377.6_amd64.deb
+        wget https://github.com/intel/compute-runtime/releases/download/24.17.29377.6/libigdgmm12_22.3.19_amd64.deb
+    ;;
         *)
         echo "ERROR: Unrecognized driver ${INSTALL_DRIVER_VERSION}."
         echo "Available values: ${AVAILABLE_DRIVERS[@]}"
@@ -327,6 +336,10 @@ _verify_checksum_ubuntu()
         wget https://github.com/intel/compute-runtime/releases/download/20.35.17767/ww35.sum
         sha256sum -c ww35.sum
     ;;
+    "24.17.29377.6")
+        wget https://github.com/intel/compute-runtime/releases/download/24.17.29377.6/ww17.sum
+        sha256sum -c ww17.sum
+    ;;
         *)
         echo "ERROR: Unrecognized driver ${INSTALL_DRIVER_VERSION}."
         echo "Available values: ${AVAILABLE_DRIVERS[@]}"
@@ -347,7 +360,7 @@ _verify_checksum_centos()
         echo "ERROR: Unrecognized driver ${INSTALL_DRIVER_VERSION}."
         echo "Available values: ${AVAILABLE_DRIVERS[@]}"
         exit -1
-    esac    
+    esac
 }
 
 verify_checksum()
@@ -363,7 +376,7 @@ download_packages()
 {
     mkdir -p "$SCRIPT_DIR/neo"
     cd "$SCRIPT_DIR/neo"
-    
+
     if [[ $DISTRO == "centos" ]]; then
         _download_packages_centos
     else
@@ -398,7 +411,7 @@ summary()
     echo "   i915.alpha_support=1"
     echo "   to the 4.14 kernel command line, in order to enable OpenCL functionality for this platform."
     echo
- 
+
 }
 
 check_root_access()
@@ -436,8 +449,8 @@ _check_distro_version()
             exit $EXIT_FAILURE
         fi
     elif [[ $DISTRO == ubuntu ]]; then
-        UBUNTU_VERSION=$(grep -m1 'VERSION_ID' /etc/os-release | grep -Eo "[0-9]{2}.[0-9]{2}") 
-        if [[ $UBUNTU_VERSION != '18.04' && $UBUNTU_VERSION != '20.04' ]]; then
+        UBUNTU_VERSION=$(grep -m1 'VERSION_ID' /etc/os-release | grep -Eo "[0-9]{2}.[0-9]{2}")
+        if [[ $UBUNTU_VERSION != '18.04' && $UBUNTU_VERSION != '20.04' && $UBUNTU_VERSION != '22.04' ]]; then
             echo "Warning: This runtime can be installed only on Ubuntu 18.04 or Ubuntu 20.04."
             echo "More info https://github.com/intel/compute-runtime/releases" >&2
             echo "Installation of Intel Compute Runtime interrupted"
@@ -466,13 +479,6 @@ check_agreement()
     echo "This script will download and install Intel(R) Graphics Compute Runtime $INSTALL_DRIVER_VERSION, "
     echo "that was used to validate this OpenVINO™ package."
     echo "In case if you already have the driver - script will try to remove it."
-    while true; do
-        read -p "Want to proceed? (y/n): " yn
-        case $yn in
-            [Yy]*) return 0  ;;
-            [Nn]*) exit 1 ;;
-        esac
-    done
 }
 
 check_specific_generation()
@@ -489,22 +495,22 @@ check_specific_generation()
                 [Yy]*) return 0 ;;
                 [Nn]*) INSTALL_DRIVER_VERSION='20.35.17767' && return 0 ;;
             esac
-        done        
+        done
     fi
 }
 
 check_current_driver()
-{   
+{
     echo "Checking current driver version..."
     if [[ $DISTRO == centos ]]; then
         gfx_version=$(yum info intel-opencl | grep Version)
     elif [[ $DISTRO == ubuntu ]]; then
         gfx_version=$(apt show intel-opencl | grep Version)
     fi
-    
+
     gfx_version="$(echo -e "${gfx_version}" | sed -e 's/^Version[[:space:]]*\:[[:space:]]*//')"
     check_specific_generation
-    
+
     # install NEO OCL driver if the current driver version < INSTALL_DRIVER_VERSION
     if [[ ! -z $gfx_version && "$(printf '%s\n' "$INSTALL_DRIVER_VERSION" "$gfx_version" | sort -V | head -n 1)" = "$INSTALL_DRIVER_VERSION" ]]; then
         echo "Intel® Graphics Compute Runtime for OpenCL™ Driver installation skipped because current version greater or equal to $INSTALL_DRIVER_VERSION" >&2
@@ -516,7 +522,7 @@ check_current_driver()
 }
 
 install()
-{   
+{
     uninstall_user_mode
     install_prerequisites
     download_packages
